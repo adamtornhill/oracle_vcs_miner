@@ -8,6 +8,9 @@
 ;;; This module is responsible for parsing version control data from 
 ;;; SQL files retrieved from an Oracle DB.
 
+;; The entity name is extracted from the file name (always a 1 to 1 match).
+;; The rest of the info is parsed from the header as described below.
+
 ;; The files contain a header that we just skip.
 ;; We start to parse from here:
 ;;
@@ -32,22 +35,29 @@
   [line]
   (re-matches #"^\*\*\s+VERSION CONTROL$" line))
 
-(def ^:const git-grammar
-  
-  "
-    entry     = <prelude*> prelude changes (* covers pull requests *)
-    <prelude> = <separator> rev <separator> date <separator> author <nl>
-    rev       =  #'[\\da-f]+'
-    author    =  #'[^\\n]*'
-    date      =  #'\\d{4}-\\d{2}-\\d{2}'
-    changes   =  change*
-    change    =  added <tab> deleted <tab> file <nl>
-    added     =  numstat
-    deleted   =  numstat
-    <numstat> =  #'[\\d-]*' (* binary files are presented with a dash *)
-    file      =  #'.+'
-    separator = '--'
-    ws        =  #'\\s'
-    tab       =  #'\\t'
-    nl        =  '\\n'")
+(defn vcs-end?
+  [line]
+  (re-matches #"\*\*+/" line))
 
+(def ^:const oracle-vcs-grammar
+  "
+  entry        = <prelude> changes*
+  prelude      = <star-line> <header-info> <star-line> <empty-line>
+  star-line    = #'^\\*+' nl
+  header-info  = begin-line #'[\\w\\s\\*]+' nl
+  empty-line   = begin-line #'[\\s\\*]+' nl
+  changes      = change*
+  change       = <begin-line> date <separator> author <separator> change-id <separator> comment
+  date         = #'\\d{2}/\\d{2}/\\d{2}'
+  author       = #'\\w+'
+  change-id    = #'[\\w\\d]+'
+  comment      = #'\\w*'
+  begin-line   = '** '
+  separator    = ' *' #'\\s+'
+  nl           =  '\\n'")
+
+(def oracle-parser (insta/parser oracle-vcs-grammar))
+
+(defn parse
+  [text]
+  (insta/parse oracle-parser text))
