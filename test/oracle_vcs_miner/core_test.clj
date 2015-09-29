@@ -5,26 +5,26 @@
 (def input-sample
   "/**************************************************************************
 **
-**	File Name	:       some_file.sql
+**FileName:some_file.sql
 **
-**	Project 	:	Some System
+**Project:Some System
 **
-**	Author		:	xyz
+**Author:xyz
 **
-**	Date Written	:	28/09/15
+**Date Written:28/09/15
 **
-**	Version		:	174
+**Version:174
 **
-**	Description	:	This is a good one
+**Description:Thisisagoodone
 **
 ***************************************************************************
-**   Date   * Author   * Change  * Description
+**Date*Author*Change*Description
 ***************************************************************************
-**	    *	       *	 *
-** 21/07/98 * abc  * T5193	 * Did something cool
-**	    *	       *	 *
-** 10/09/98 * xyz  * T5449	 * But this is so cool that
-**	    *	       *	 * I need two lines to describe it.
+*****
+**21/07/98*abc*T5193*Did something cool
+*****
+**10/09/98*xyz*T5449*But this is so cool that
+*****I need two lines to describe it.
 ")
 
 (deftest parses-vcs-header
@@ -40,5 +40,5 @@
          "2015-07-21")))
 
 (deftest transforms-parse-results-to-identity-rows
-  (is (= (m/as-identity-row "my.sql" [:change [:date "21/07/98"] [:author "abc"] [:change-id "T5193"]])
-         ["abc" "T5193" "1998-07-21" "my.sql"])))
+  (is (= (m/as-identity-rows [[:file-name "my.sql"] [:change [:date "21/07/98"] [:author "abc"] [:change-id "T5193"]]])
+         [["abc" "T5193" "1998-07-21" "my.sql" "-"]])))

@@ -60,23 +60,23 @@
 (def ^:const oracle-vcs-grammar
   "
   <entry>        = header changes*
-  <header>       = <start-of-head> file-name <(#'.*' nl)*> <prelude>
-  start-of-head  = #'^/\\*+' nl '**' nl
-  file-name      =  <#'^\\*\\*\\s+File Name\\s+:\\s+'> #'[\\w_]+\\.sql' <nl>
-  prelude        = <star-line> <header-info> <star-line> <empty-line>
+  <header>       = <start-of-head> <star-line*> file-name <(#'.*' nl)*> <prelude>
+  start-of-head  = #'^/\\*+' nl
+  file-name      =  <'**' #'FileName:'> #'[\\w_]+\\.sql' <nl>
+  prelude        = <star-line> <header-info> <star-line> <empty-line?>
   star-line      = #'^\\*+' nl
-  header-info    = #'\\*\\*\\s*Date\\s*\\*\\s*Author\\s*\\*\\s*Change\\s*\\*\\s*Description' nl
-  empty-line     = '**          *          *        *' nl
+  header-info    = #'\\*\\*Date\\*Author\\*Change\\*Description' nl
+  empty-line     = '*****' nl
   <changes>      = (change | (change <empty-line>))*
   change         = <begin-line> date <separator> author <separator> change-id <separator> <comment>
   date           = #'\\d+/\\d+/\\d+'
   author         = #'\\w+'
   change-id      = #'[\\w\\d]+'
   comment        = ((comment-text <nl?>) | (comment-text <nl> comment-lead))*
-  <comment-lead> = '**	    *	       *	 * '
+  <comment-lead> = '*****'
   <comment-text> = #'[^\\n]*'
-  begin-line     = #'\\*\\*\\s*'
-  separator      = #'\\s*\\*\\s*'
+  begin-line     = #'\\*\\*'
+  separator      = '*'
   nl             =  '\\n'")
 
 (def oracle-parser (insta/parser oracle-vcs-grammar))
@@ -109,14 +109,6 @@
 (defn remove-non-vcs-info-from
   [headers]
   (filter #(some vcs-start? %) headers))
-
-(defn extract-vcs-header-from
-  [lines]
-  (->> lines
-       (drop-while (comp not vcs-start?))
-       (drop 1) ; vcs-start
-       (take-while (comp not vcs-end?))
-       (clojure.string/join "\n")))
 
 (def ^:private input-time-formatter (tf/formatter "dd/MM/yy"))
 (def ^:private output-time-formatter (tf/formatters :year-month-day))
@@ -157,7 +149,10 @@
 (defn as-csv
   [vs]
   (->> vs
-       (map #(clojure.string/join "\n" %))
+       (map #(clojure.string/join "\n" 
+                                  (map (fn [line]
+                                         (clojure.string/replace line #"\s+" ""))
+                                       %)))
        (map parse)
        (map as-identity-rows)
        (apply concat)))
