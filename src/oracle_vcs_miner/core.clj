@@ -4,7 +4,8 @@
 ;;; see http://www.gnu.org/licenses/gpl.html
 (ns oracle-vcs-miner.core
   (:require [instaparse.core :as insta]
-            [clj-time.format :as tf]))
+            [clj-time.format :as tf]
+            [clojure.data.csv :as csv]))
 
 ;;; This module is responsible for parsing version control data from 
 ;;; SQL files retrieved from an Oracle DB.
@@ -136,7 +137,7 @@
            :let [date (get-in c [1 1])
                  author (get-in c [2 1])
                  revision (get-in c [3 1])]]
-      [author revision (as-output-time date) file-name])))
+      [author revision (as-output-time date) file-name "-"])))
 
 (defn as-csv
   [vs]
@@ -146,10 +147,21 @@
        (map as-identity-rows)
        (apply concat)))
 
+(defn write-csv
+  [rows]
+  (csv/write-csv *out* [["author" "rev" "date" "entity" "message"]])
+  (csv/write-csv *out* rows)
+  rows)
+
 (defn as-csv-identity-from-full-file
-  [file-name]
-  (with-open [rdr (clojure.java.io/reader file-name)]
-    (-> (line-seq rdr)
-        (extract-all-vcs-headers-from [])
-        remove-non-vcs-info-from
-        as-csv)))
+  ([file-name]
+   (with-open [rdr (clojure.java.io/reader file-name)]
+     (-> (line-seq rdr)
+         (extract-all-vcs-headers-from [])
+         remove-non-vcs-info-from
+         as-csv
+         write-csv)))
+  ([input-file-name output-file-name]
+   (with-open [out-file (clojure.java.io/writer output-file-name)]
+     (binding [*out* out-file]
+       (as-csv-identity-from-full-file input-file-name)))))
