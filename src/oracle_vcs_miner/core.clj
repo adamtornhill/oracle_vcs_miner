@@ -46,12 +46,12 @@
   star-line      = #'^\\*+' nl
   header-info    = '**   Date   * Author   * Change  * Description' nl
   empty-line     = '**	    *	       *	 *' nl
-  <changes>      = change*
+  <changes>      = (change | (change empty-line))*
   change         = <begin-line> date <separator> author <separator> change-id <separator> <comment>
   date           = #'\\d{2}/\\d{2}/\\d{2}'
   author         = #'\\w+'
   change-id      = #'[\\w\\d]+'
-  comment        = ((comment-text <nl>) | (comment-text <nl> comment-lead))*
+  comment        = ((comment-text <nl?>) | (comment-text <nl> comment-lead))*
   <comment-lead> = '**	    *	       *	 * '
   <comment-text> = #'[^\\n]*'
   begin-line     = '** '
@@ -63,3 +63,19 @@
 (defn parse
   [text]
   (insta/parse oracle-parser text))
+
+(defn extract-vcs-header-from
+  [lines]
+  (->> lines
+       (drop-while (comp not vcs-start?))
+       (drop 1) ; vcs-start
+       (take-while (comp not vcs-end?))
+       (clojure.string/join "\n")))
+
+(defn as-csv
+  [file-name]
+  (with-open [rdr (clojure.java.io/reader file-name)]
+    (->> rdr
+         line-seq
+         extract-vcs-header-from
+         parse)))
