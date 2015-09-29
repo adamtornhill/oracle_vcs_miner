@@ -124,29 +124,32 @@
        (tf/parse input-time-formatter)
        (tf/unparse output-time-formatter)))
 
-(defn as-identity-row
+(defn as-identity-rows
   "Transforms the parse results into the identity format that 
    we use to calculate evolutionary metrics.
    The input looks like this:
     [:change [:date '21/07/98'] [:author 'abc'] [:change-id 'T5193']]"
-  [sql-file-name v]
-  (let [date (get-in v [1 1])
-        author (get-in v [2 1])
-        revision (get-in v [3 1])]
-    [author revision (as-output-time date) sql-file-name]))
+  [v]
+  (let [file-name (get-in v [0 1])
+        changes (rest v)]
+    (map (fn [c]
+           (let [date (get-in c [1 1])
+                 author (get-in c [2 1])
+                 revision (get-in c [3 1])]
+             [author revision (as-output-time date) file-name]))
+         changes)))
 
 (defn as-csv
-  [file-name]
-  (with-open [rdr (clojure.java.io/reader file-name)]
-    (->> rdr
-         line-seq
-         extract-vcs-header-from
-         parse
-         (map (partial as-identity-row "my_file_name.sql")))))
+  [vs]
+  (->> vs
+       (map #(clojure.string/join "\n" %))
+       (map parse)
+       (map as-identity-rows)))
 
 (defn as-csv-identity-from-full-file
   [file-name]
   (with-open [rdr (clojure.java.io/reader file-name)]
     (-> (line-seq rdr)
         (extract-all-vcs-headers-from [])
-        remove-non-vcs-info-from)))
+        remove-non-vcs-info-from
+        as-csv)))
