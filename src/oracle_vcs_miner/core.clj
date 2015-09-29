@@ -32,6 +32,13 @@
 ;; **	    * xyz    * T6481	 * Then I come along and make
 ;; **	    *	       *	 * one more change on the same day!
 
+(defn file-name?
+  "Extracts the file name from the header info:
+   **	File Name	:	the_second_file.sql"
+  [line]
+  (if-let [m (re-matches #"^\*\*\s+File Name\s+:\s+([\w_]+\.sql)$" line)]
+    (second m)))
+
 (defn vcs-start?
   [line]
   (re-matches #"^\*\*\s+VERSION CONTROL$" line))
