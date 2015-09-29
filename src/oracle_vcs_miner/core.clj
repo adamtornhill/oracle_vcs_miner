@@ -15,6 +15,20 @@
 ;; The files contain a header that we just skip.
 ;; We start to parse from here:
 ;;
+;; /**************************************************************************
+;; **
+;; **	File Name	:	some_name.sql
+;; **
+;; **	Project 	:	An important one
+;; **
+;; **	Author		:	xyz
+;; **
+;; **	Date Written	:	28/09/15
+;; **
+;; **	Version		:	174
+;; **
+;; **	Description	:	Pretty straightforward
+;; **
 ;; ***************************************************************************
 ;; **			      VERSION CONTROL
 ;; ***************************************************************************
@@ -32,13 +46,6 @@
 ;; **	    * xyz    * T6481	 * Then I come along and make
 ;; **	    *	       *	 * one more change on the same day!
 
-(defn file-name?
-  "Extracts the file name from the header info:
-   **	File Name	:	the_second_file.sql"
-  [line]
-  (if-let [m (re-matches #"^\*\*\s+File Name\s+:\s+([\w_]+\.sql)$" line)]
-    (second m)))
-
 (defn vcs-start?
   [line]
   (re-matches #"^\*\*\s+VERSION CONTROL$" line))
@@ -49,7 +56,10 @@
 
 (def ^:const oracle-vcs-grammar
   "
-  <entry>        = <prelude> changes*
+  <entry>        = header changes*
+  <header>       = <start-of-head> file-name <(#'.*' nl)*> <prelude>
+  start-of-head  = #'^/\\*+' nl '**' nl
+  file-name      =  <#'^\\*\\*\\s+File Name\\s+:\\s+'> #'[\\w_]+\\.sql' <nl>
   prelude        = <star-line> <header-info> <star-line> <empty-line>
   star-line      = #'^\\*+' nl
   header-info    = '**   Date   * Author   * Change  * Description' nl

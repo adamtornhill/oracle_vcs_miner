@@ -13,7 +13,21 @@
   (is (m/vcs-end? "**************************************************************************/")))
 
 (def input-sample
-  "***************************************************************************
+  "/**************************************************************************
+**
+**	File Name	:       some_file.sql
+**
+**	Project 	:	Some System
+**
+**	Author		:	xyz
+**
+**	Date Written	:	28/09/15
+**
+**	Version		:	174
+**
+**	Description	:	This is a good one
+**
+***************************************************************************
 **   Date   * Author   * Change  * Description
 ***************************************************************************
 **	    *	       *	 *
@@ -58,7 +72,8 @@ PROCEDURE some_amazing_procedure
 
 (deftest parses-vcs-header
   (is (= (m/parse input-sample)
-         [[:change [:date "21/07/98"] [:author "abc"] [:change-id "T5193"]]
+         [[:file-name "some_file.sql"]
+          [:change [:date "21/07/98"] [:author "abc"] [:change-id "T5193"]]
           [:change [:date "10/09/98"] [:author "xyz"] [:change-id "T5449"]]])))
 
 (deftest extracts-vcs-header-from-content
