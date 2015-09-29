@@ -63,9 +63,10 @@
   <header>       = <start-of-head> <star-line*> file-name <(#'.*' nl)*> <prelude>
   start-of-head  = #'^/\\*+' nl
   file-name      =  <'**' #'FileName:'> #'[\\w_]+\\.sql' <nl>
-  prelude        = <star-line> <header-info> <star-line> <empty-line?>
+  prelude        = <star-line> <header-info> <star-line> <empty-line*> <junk*> <empty-line?>
   star-line      = #'^\\*+' nl
   header-info    = #'\\*\\*Date\\*Author\\*Change\\*Description' nl
+  junk           =  begin-line (#'dd/mm/yy[\\*x]+' nl) | (#'[\\*x]+' nl)
   empty-line     = '*****' nl
   <changes>      = (change | (change <empty-line>))*
   change         = <begin-line> date <separator> author <separator> change-id <separator> <comment>
@@ -83,6 +84,8 @@
 
 (defn parse
   [text]
+  ;(println text)
+  ;(println (insta/parse oracle-parser text))
   (insta/parse oracle-parser text))
 
 (defn- start-of-header?
