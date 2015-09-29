@@ -23,4 +23,5 @@
 
 (deftest parses-vcs-header
   (is (= (m/parse input-sample)
-         [])))
+         [[:change [:date "21/07/98"] [:author "abc"] [:change-id "T5193"]]
+          [:change [:date "10/09/98"] [:author "xyz"] [:change-id "T5449"]]])))
