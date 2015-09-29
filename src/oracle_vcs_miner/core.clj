@@ -3,6 +3,7 @@
 ;;; Distributed under the GNU General Public License v3.0,
 ;;; see http://www.gnu.org/licenses/gpl.html
 (ns oracle-vcs-miner.core
+  (:gen-class)
   (:require [instaparse.core :as insta]
             [clj-time.format :as tf]
             [clojure.data.csv :as csv]
