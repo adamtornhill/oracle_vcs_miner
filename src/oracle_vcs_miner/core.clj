@@ -132,19 +132,19 @@
   [v]
   (let [file-name (get-in v [0 1])
         changes (rest v)]
-    (map (fn [c]
-           (let [date (get-in c [1 1])
+    (for [c changes
+           :let [date (get-in c [1 1])
                  author (get-in c [2 1])
-                 revision (get-in c [3 1])]
-             [author revision (as-output-time date) file-name]))
-         changes)))
+                 revision (get-in c [3 1])]]
+      [author revision (as-output-time date) file-name])))
 
 (defn as-csv
   [vs]
   (->> vs
        (map #(clojure.string/join "\n" %))
        (map parse)
-       (map as-identity-rows)))
+       (map as-identity-rows)
+       (apply concat)))
 
 (defn as-csv-identity-from-full-file
   [file-name]
