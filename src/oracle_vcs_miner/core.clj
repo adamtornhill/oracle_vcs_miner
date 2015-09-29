@@ -41,20 +41,22 @@
 
 (def ^:const oracle-vcs-grammar
   "
-  entry        = <prelude> changes*
-  prelude      = <star-line> <header-info> <star-line> <empty-line>
-  star-line    = #'^\\*+' nl
-  header-info  = '**   Date   * Author   * Change  * Description' nl
-  empty-line   = '**	    *	       *	 *' nl
-  changes      = change*
-  change       = <begin-line> date <separator> author <separator> change-id <separator> comment
-  date         = #'\\d{2}/\\d{2}/\\d{2}'
-  author       = #'\\w+'
-  change-id    = #'[\\w\\d]+'
-  comment      = #'[A-Za-z]*' (nl '**	    *	       *	 *' #'[A-Za-z]*')*
-  begin-line   = '** '
-  separator    = #'\\s*\\*\\s*'
-  nl           =  '\\n'")
+  entry          = <prelude> changes*
+  prelude        = <star-line> <header-info> <star-line> <empty-line>
+  star-line      = #'^\\*+' nl
+  header-info    = '**   Date   * Author   * Change  * Description' nl
+  empty-line     = '**	    *	       *	 *' nl
+  changes        = change*
+  change         = <begin-line> date <separator> author <separator> change-id <separator> comment
+  date           = #'\\d{2}/\\d{2}/\\d{2}'
+  author         = #'\\w+'
+  change-id      = #'[\\w\\d]+'
+  comment        = ((comment-text <nl>) | (comment-text <nl> comment-lead))*
+  <comment-lead> = '**	    *	       *	 * '
+  <comment-text> = #'[^\\n]*'
+  begin-line     = '** '
+  separator      = #'\\s*\\*\\s*'
+  nl             =  '\\n'")
 
 (def oracle-parser (insta/parser oracle-vcs-grammar))
 
