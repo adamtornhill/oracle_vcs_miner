@@ -18,6 +18,7 @@
 ***************************************************************************
 **	    *	       *	 *
 ** 21/07/98 * abc  * T5193	 * Did something cool
+**	    *	       *	 *
 ** 10/09/98 * xyz  * T5449	 * But this is so cool that
 **	    *	       *	 * I need two lines to describe it.
 ")
@@ -63,4 +64,13 @@ PROCEDURE some_amazing_procedure
 (deftest extracts-vcs-header-from-content
   (is (= (m/extract-vcs-header-from input-seq)
          "***************************************************************************\n**   Date   * Author   * Change  * Description\n***************************************************************************\n**\t    *\t       *\t *\n** 21/07/98 * abc  * T5193\t * Did something cool\n** 10/09/98 * xyz  * T5449\t * But this is so cool that\n**\t    *\t       *\t * I need two lines to describe it.")))
- 
+
+(deftest converts-to-external-time-format
+  (is (= (m/as-output-time "21/07/98")
+         "1998-07-21"))
+  (is (= (m/as-output-time "21/07/15")
+         "2015-07-21")))
+
+(deftest transforms-parse-results-to-identity-rows
+  (is (= (m/as-identity-row "my.sql" [:change [:date "21/07/98"] [:author "abc"] [:change-id "T5193"]])
+         ["abc" "T5193" "1998-07-21" "my.sql"])))

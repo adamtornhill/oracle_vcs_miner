@@ -3,7 +3,8 @@
 ;;; Distributed under the GNU General Public License v3.0,
 ;;; see http://www.gnu.org/licenses/gpl.html
 (ns oracle-vcs-miner.core
-  (:require [instaparse.core :as insta]))
+  (:require [instaparse.core :as insta]
+            [clj-time.format :as tf]))
 
 ;;; This module is responsible for parsing version control data from 
 ;;; SQL files retrieved from an Oracle DB.
@@ -46,7 +47,7 @@
   star-line      = #'^\\*+' nl
   header-info    = '**   Date   * Author   * Change  * Description' nl
   empty-line     = '**	    *	       *	 *' nl
-  <changes>      = (change | (change empty-line))*
+  <changes>      = (change | (change <empty-line>))*
   change         = <begin-line> date <separator> author <separator> change-id <separator> <comment>
   date           = #'\\d{2}/\\d{2}/\\d{2}'
   author         = #'\\w+'
@@ -72,10 +73,31 @@
        (take-while (comp not vcs-end?))
        (clojure.string/join "\n")))
 
+(def ^:private input-time-formatter (tf/formatter "dd/MM/yy"))
+(def ^:private output-time-formatter (tf/formatters :year-month-day))
+
+(defn as-output-time
+  [v]
+  (->> v
+       (tf/parse input-time-formatter)
+       (tf/unparse output-time-formatter)))
+
+(defn as-identity-row
+  "Transforms the parse results into the identity format that 
+   we use to calculate evolutionary metrics.
+   The input looks like this:
+    [:change [:date '21/07/98'] [:author 'abc'] [:change-id 'T5193']]"
+  [sql-file-name v]
+  (let [date (get-in v [1 1])
+        author (get-in v [2 1])
+        revision (get-in v [3 1])]
+    [author revision (as-output-time date) sql-file-name]))
+
 (defn as-csv
   [file-name]
   (with-open [rdr (clojure.java.io/reader file-name)]
     (->> rdr
          line-seq
          extract-vcs-header-from
-         parse)))
+         parse
+         (map (partial as-identity-row "my_file_name.sql")))))
