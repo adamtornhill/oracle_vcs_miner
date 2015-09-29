@@ -7,4 +7,6 @@
                  [instaparse "1.4.0"]
                  [org.clojure/tools.cli "0.3.1"]
                  [org.clojure/data.csv "0.1.2"]
-                 [clj-time "0.9.0"]])
+                 [clj-time "0.9.0"]]
+  :main oracle-vcs-miner.core
+  :aot [oracle-vcs-miner.core])

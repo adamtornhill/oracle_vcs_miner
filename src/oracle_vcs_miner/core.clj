@@ -5,7 +5,8 @@
 (ns oracle-vcs-miner.core
   (:require [instaparse.core :as insta]
             [clj-time.format :as tf]
-            [clojure.data.csv :as csv]))
+            [clojure.data.csv :as csv]
+            [clojure.tools.cli :as cli]))
 
 ;;; This module is responsible for parsing version control data from 
 ;;; SQL files retrieved from an Oracle DB.
@@ -165,3 +166,28 @@
    (with-open [out-file (clojure.java.io/writer output-file-name)]
      (binding [*out* out-file]
        (as-csv-identity-from-full-file input-file-name)))))
+
+;;
+;; Command Line Interface
+;;
+
+(def cli-options
+  [["-l" "--log LOG" "Log file with SQL input data"]
+   ["-o" "--out OUT" "Output file that gets CSV identity results"]])
+
+(defn- error-msg [errors]
+  (str "The following errors occurred while parsing your command:\n\n"
+       (clojure.string/join \newline errors)))
+
+(defn- exit [status msg]
+  (println msg)
+  (System/exit status))
+
+(defn -main
+  [& args]
+  (let [{:keys [options arguments errors summary]} (cli/parse-opts args cli-options)]
+    (if errors 
+      (exit 1 (error-msg errors))
+      (if (some nil? [(:log options) (:out options)])
+        (exit 1 "You need to provide both -l and -o options")
+        (as-csv-identity-from-full-file (:log options) (:out options))))))
