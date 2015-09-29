@@ -76,7 +76,7 @@
   change         = <begin-line> date <separator> author <separator> change-id <separator?> <comment>
   date           = #'\\d+/\\d+/\\d+'
   author         = #'\\w+'
-  change-id      = #'[\\w\\d]+'
+  change-id      = #'[\\w\\d]*'
   comment        = ((comment-text <nl?>) | (comment-text <nl> comment-lead))*
   <comment-lead> = '*****'
   <comment-text> = #'[^\\n]*'
