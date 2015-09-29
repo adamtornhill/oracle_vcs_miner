@@ -49,9 +49,13 @@
 ;; **	    * xyz    * T6481	 * Then I come along and make
 ;; **	    *	       *	 * one more change on the same day!
 
+(defn- strip-ws
+  [line]
+  (clojure.string/trim line))
+
 (defn vcs-start?
   [line]
-  (re-matches #"^\*\*\s+VERSION CONTROL$" line))
+  (re-matches #"^\*\*\s+VERSION CONTROL$" (strip-ws line)))
 
 (defn vcs-end?
   [line]
@@ -65,11 +69,11 @@
   file-name      =  <'**' #'FileName:'> #'[\\w_]+\\.sql' <nl>
   prelude        = <star-line> <header-info> <star-line> <empty-line*> <junk*> <empty-line?>
   star-line      = #'^\\*+' nl
-  header-info    = #'\\*\\*Date\\*Author\\*Change\\*Description' nl
+  header-info    = #'\\*\\*Date\\*Author\\*((Change)|(Track))\\*Description' nl
   junk           =  begin-line (#'dd/mm/yy[\\*x]+' nl) | (#'[\\*x]+' nl)
   empty-line     = '*****' nl
   <changes>      = (change | (change <empty-line>))*
-  change         = <begin-line> date <separator> author <separator> change-id <separator> <comment>
+  change         = <begin-line> date <separator> author <separator> change-id <separator?> <comment>
   date           = #'\\d+/\\d+/\\d+'
   author         = #'\\w+'
   change-id      = #'[\\w\\d]+'
@@ -90,11 +94,11 @@
 
 (defn- start-of-header?
   [line]
-  (re-matches #"^/\*+$" line))
+  (re-matches #"^/\*+$" (strip-ws line)))
 
 (defn- end-of-header?
   [line]
-  (re-matches #"^\*+/$" line))
+  (re-matches #"^\*+/$" (strip-ws line)))
 
 (defn- scan-next-header
   [lines]
