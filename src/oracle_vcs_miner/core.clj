@@ -65,17 +65,17 @@
   file-name      =  <#'^\\*\\*\\s+File Name\\s+:\\s+'> #'[\\w_]+\\.sql' <nl>
   prelude        = <star-line> <header-info> <star-line> <empty-line>
   star-line      = #'^\\*+' nl
-  header-info    = '**   Date   * Author   * Change  * Description' nl
-  empty-line     = '**	    *	       *	 *' nl
+  header-info    = #'\\*\\*\\s*Date\\s*\\*\\s*Author\\s*\\*\\s*Change\\s*\\*\\s*Description' nl
+  empty-line     = '**          *          *        *' nl
   <changes>      = (change | (change <empty-line>))*
   change         = <begin-line> date <separator> author <separator> change-id <separator> <comment>
-  date           = #'\\d{2}/\\d{2}/\\d{2}'
+  date           = #'\\d+/\\d+/\\d+'
   author         = #'\\w+'
   change-id      = #'[\\w\\d]+'
   comment        = ((comment-text <nl?>) | (comment-text <nl> comment-lead))*
   <comment-lead> = '**	    *	       *	 * '
   <comment-text> = #'[^\\n]*'
-  begin-line     = '** '
+  begin-line     = #'\\*\\*\\s*'
   separator      = #'\\s*\\*\\s*'
   nl             =  '\\n'")
 
@@ -127,6 +127,17 @@
        (tf/parse input-time-formatter)
        (tf/unparse output-time-formatter)))
 
+(defn is-valid-date
+  [date file-name]
+  (try
+    (do
+      (as-output-time date)
+      true)
+    (catch Exception e
+      (do
+        (println "Error")
+        false))))
+
 (defn as-identity-rows
   "Transforms the parse results into the identity format that 
    we use to calculate evolutionary metrics.
@@ -138,7 +149,9 @@
     (for [c changes
            :let [date (get-in c [1 1])
                  author (get-in c [2 1])
-                 revision (get-in c [3 1])]]
+                 revision (get-in c [3 1])
+                 valid? (is-valid-date date file-name)]
+          :when valid?]
       [author revision (as-output-time date) file-name "-"])))
 
 (defn as-csv
