@@ -72,6 +72,31 @@
   [text]
   (insta/parse oracle-parser text))
 
+(defn- start-of-header?
+  [line]
+  (re-matches #"^/\*+$" line))
+
+(defn- end-of-header?
+  [line]
+  (re-matches #"^\*+/$" line))
+
+(defn- scan-next-header
+  [lines]
+  (->> lines
+       (drop-while (comp nil? start-of-header?))
+       (split-with (comp nil? end-of-header?))))
+
+(defn extract-all-vcs-headers-from
+  [lines-left acc]
+  (if (not (seq lines-left))
+    acc
+    (let [[header more-lines-left] (scan-next-header lines-left)]
+      (recur more-lines-left (conj acc (into [] header))))))
+
+(defn remove-non-vcs-info-from
+  [headers]
+  (filter #(some vcs-start? %) headers))
+
 (defn extract-vcs-header-from
   [lines]
   (->> lines
@@ -108,3 +133,10 @@
          extract-vcs-header-from
          parse
          (map (partial as-identity-row "my_file_name.sql")))))
+
+(defn as-csv-identity-from-full-file
+  [file-name]
+  (with-open [rdr (clojure.java.io/reader file-name)]
+    (-> (line-seq rdr)
+        (extract-all-vcs-headers-from [])
+        remove-non-vcs-info-from)))
