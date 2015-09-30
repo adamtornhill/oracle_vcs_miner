@@ -88,8 +88,6 @@
 
 (defn parse
   [text]
-  ;(println text)
-  ;(println (insta/parse oracle-parser text))
   (insta/parse oracle-parser text))
 
 (defn- start-of-header?
@@ -134,7 +132,8 @@
       true)
     (catch Exception e
       (do
-        (println "Error")
+        (binding [*out* *err*]
+          (println "Error"))
         false))))
 
 (defn as-identity-rows
